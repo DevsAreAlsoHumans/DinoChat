@@ -37,6 +37,28 @@ DinoChat est une application de chat en ligne permettant aux utilisateurs de com
 
 ## Architecture Technique
 
+  ├── index.php
+  ├── app/
+  │   ├── controllers/
+  │   │   ├── ChatController.php
+  │   │   ├── UserController.php
+  │   ├── models/
+  │   │   ├── Chat.php
+  │   │   ├── User.php
+  │   ├── views/
+  │   │   ├── chat/
+  │   │   │   ├── global.php
+  │   │   │   ├── private.php
+  │   │   ├── user/
+  │   │   │   ├── login.php
+  │   │   │   ├── register.php
+  │   ├── core/
+  │   │   ├── Database.php
+  │   │   ├── Controller.php
+  ├── public/
+  │   ├── css/
+  │   ├── js/
+
 ### Langages et Technologies
 - **Backend** : PHP
 - **Base de données** : MySQL (pour les utilisateurs, messages, et réactions).
