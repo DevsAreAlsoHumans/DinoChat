@@ -38,7 +38,7 @@ DinoChat est une application de chat en ligne permettant aux utilisateurs de com
 ## Architecture Technique
 
 ### Langages et Technologies
-- **Backend** : PHP (framework recommandé : Laravel).
+- **Backend** : PHP
 - **Base de données** : MySQL (pour les utilisateurs, messages, et réactions).
 - **Frontend** : HTML, CSS, JavaScript (AJAX/WebSocket pour la mise à jour en temps réel).
 - **Authentification** : Sessions utilisateur via PHP, avec tokens sécurisés ou cookies.
@@ -70,8 +70,8 @@ DinoChat est une application de chat en ligne permettant aux utilisateurs de com
 
 ## Livrables
 - Application fonctionnelle avec toutes les fonctionnalités décrites.
-- Documentation technique pour les développeurs.
-- Guide d’utilisation pour les utilisateurs finaux.
+- Documentation technique pour les développeurs. (facultatif)
+- Guide d’utilisation pour les utilisateurs finaux. (facultatif)
 
 
 ---
