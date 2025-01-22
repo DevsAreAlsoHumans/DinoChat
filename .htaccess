@@ -1,0 +1,11 @@
+RewriteEngine On
+
+# Définir la base (dans ce cas, la racine du domaine)
+RewriteBase /
+
+# Ne pas réécrire si le fichier ou le dossier existe
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Réécrire toutes les requêtes vers index.php
+RewriteRule ^ index.php [QSA,L]
