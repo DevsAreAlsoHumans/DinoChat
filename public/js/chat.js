@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             })
             .catch(error => console.error('Erreur lors de l\'envoi du message :', error));
-    }    
+    }
 
     // Fonction pour rechercher des utilisateurs
     searchUser.addEventListener('input', function () {
@@ -122,16 +122,15 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .catch(error => console.error('Erreur lors du chargement des conversations :', error));
     }
-    
 
     function addConversationToSidebar(receiverId, pseudo) {
         const conversationList = document.getElementById('conversations-list');
         if (!conversationList) return;
-    
+
         const existingItem = Array.from(conversationList.children).find(
             (item) => item.dataset.userId === String(receiverId)
         );
-    
+
         if (!existingItem) {
             const li = document.createElement('li');
             li.textContent = pseudo;
@@ -141,23 +140,23 @@ document.addEventListener('DOMContentLoaded', function () {
             li.addEventListener('click', () => startPrivateChat(receiverId, pseudo));
             conversationList.appendChild(li);
         }
-    }       
-    
-    
+    }
+
     function startPrivateChat(receiverId, pseudo) {
         currentReceiverId = receiverId;
         privateChatTitle.textContent = `Conversation privée avec ${pseudo}`;
         document.getElementById('private-chat').style.display = 'block';
         loadMessages();
-    
+
         addConversationToSidebar(receiverId, pseudo);
-    }    
+    }
 
     closePrivateChatButton.addEventListener('click', function () {
         currentReceiverId = null;
         document.getElementById('private-chat').style.display = 'none';
     });
 
+    // Gestion des émojis
     emojiPickerButton.addEventListener('click', function () {
         emojiContainer.style.display = emojiContainer.style.display === 'none' ? 'block' : 'none';
     });

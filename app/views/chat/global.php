@@ -24,13 +24,17 @@
                     <input type="text" id="search-user" class="form-control mb-3" placeholder="Rechercher un utilisateur...">
                     <ul id="user-results" class="list-group mb-3 d-none"></ul>
                     <div id="chat-box" class="chat-box mb-3"></div>
+
                     <form id="chat-form">
                         <div class="input-group">
+                            <!-- Bouton pour les émojis -->
                             <button type="button" id="emoji-picker-button" class="btn btn-secondary">😀</button>
                             <input type="text" id="message-input" class="form-control" placeholder="Écrivez un message..." required>
                             <button type="submit" class="btn btn-primary">Envoyer</button>
                         </div>
-                        <div id="emoji-container" class="mt-2 d-none">
+                        <!-- Conteneur des émojis -->
+                        <div id="emoji-container" class="mt-2">
+                            <span style="cursor: pointer; font-size: 1.5rem;">😀</span>
                             <span style="cursor: pointer; font-size: 1.5rem;">😂</span>
                             <span style="cursor: pointer; font-size: 1.5rem;">😍</span>
                             <span style="cursor: pointer; font-size: 1.5rem;">👍</span>
@@ -50,15 +54,21 @@
                 <div class="card p-4">
                     <h3 id="private-chat-title" class="text-center mb-4">Conversation privée</h3>
                     <button id="close-private-chat" class="btn btn-secondary mb-3">Fermer</button>
-                    <div id="private-chat-box" class="chat-box"></div>
+
+                    <!-- Boîte de messages privés -->
+                    <div id="private-chat-box" class="chat-box mb-3"></div>
+                    
+                    <!-- Formulaire de messages privés -->
                     <form id="private-chat-form">
                         <div class="input-group">
+                            <!-- Bouton pour les émojis dans le chat privé -->
                             <button type="button" id="private-emoji-picker-button" class="btn btn-secondary">😀</button>
                             <input type="text" id="private-message-input" class="form-control" placeholder="Écrivez un message..." required>
                             <button type="submit" class="btn btn-primary">Envoyer</button>
                         </div>
-                        <div id="private-emoji-container" class="mt-2 d-none">
-                        <span style="cursor: pointer; font-size: 1.5rem;">😀</span>
+                        <!-- Conteneur des émojis pour le chat privé -->
+                        <div id="private-emoji-container" class="mt-2">
+                            <span style="cursor: pointer; font-size: 1.5rem;">😀</span>
                             <span style="cursor: pointer; font-size: 1.5rem;">😂</span>
                             <span style="cursor: pointer; font-size: 1.5rem;">😍</span>
                             <span style="cursor: pointer; font-size: 1.5rem;">👍</span>
