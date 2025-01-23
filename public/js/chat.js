@@ -204,6 +204,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 });
     
+                // Mettre à jour le badge total des notifications
+                const menuNotificationBadge = document.getElementById('menu-notification-badge');
+                if (menuNotificationBadge) {
+                    menuNotificationBadge.textContent = totalUnread;
+                    menuNotificationBadge.style.display = totalUnread > 0 ? 'inline-block' : 'none';
+                }
+    
                 if (totalUnread > previousUnreadCount) {
                     playNotificationSound();
                 }
@@ -215,6 +222,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 alert('Une erreur est survenue lors de la récupération des notifications.');
             });
     }
+    
 
     function updateNotificationBadge(element, unreadCount) {
         let badge = element.querySelector('.notification-badge');

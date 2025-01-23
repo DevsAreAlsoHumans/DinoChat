@@ -10,7 +10,9 @@
 <body>
     <!-- Barre latérale -->
     <div id="sidebar" class="sidebar">
-        <button id="sidebar-toggle" class="btn btn-secondary">☰</button>
+        <button id="sidebar-toggle" class="btn btn-secondary">☰ <span id="menu-notification-badge" class="badge bg-danger position-absolute start-0 top-0 translate-middle">
+            0
+        </span> </button>
         <h5>Conversations</h5>
         <ul id="conversations-list" class="list-group"></ul>
     </div>
