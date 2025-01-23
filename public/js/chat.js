@@ -1,6 +1,4 @@
 document.addEventListener('DOMContentLoaded', function () {
-
-    // Variables pour les éléments du DOM
     const chatBox = document.getElementById('chat-box');
     const chatForm = document.getElementById('chat-form');
     const messageInput = document.getElementById('message-input');
@@ -21,47 +19,116 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let currentReceiverId = null;
 
-    // Fonction pour charger les messages
     function loadMessages() {
-        // À compléter : Appel à l'API pour récupérer les messages et mise à jour de l'interface
+        const endpoint = currentReceiverId
+            ? `/chat/private/${currentReceiverId}/messages`
+            : '/chat/messages';
+
+        fetch(endpoint)
+            .then(response => response.json())
+            .then(data => {
+                const targetBox = currentReceiverId ? privateChatBox : chatBox;
+                targetBox.innerHTML = '';
+                data.forEach(message => {
+                    const messageElement = document.createElement('div');
+                    messageElement.classList.add('message');
+                    const pseudo = message.sender_pseudo || message.pseudo || "Utilisateur";
+                    messageElement.innerHTML = `<strong>${pseudo} :</strong> ${message.content}`;
+                    targetBox.appendChild(messageElement);
+                });
+                targetBox.scrollTop = targetBox.scrollHeight;
+            })
+            .catch(error => console.error('Erreur lors du chargement des messages :', error));
     }
 
-    // Fonction pour envoyer un message
     function sendMessage(event, isPrivate = false) {
-        // À compléter : Envoi du message au serveur et réinitialisation du champ d'entrée
+        event.preventDefault();
+        const message = isPrivate ? privateMessageInput.value : messageInput.value;
+        const endpoint = isPrivate
+            ? `/chat/private/${currentReceiverId}/send`
+            : '/chat/send';
+
+        fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message }),
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (isPrivate) {
+                        privateMessageInput.value = '';
+                    } else {
+                        messageInput.value = '';
+                    }
+                    loadMessages();
+                } else {
+                    console.error('Erreur lors de l\'envoi du message :', data.error);
+                }
+            })
+            .catch(error => console.error('Erreur lors de l\'envoi du message :', error));
     }
 
-    // Recherche d'utilisateurs
     searchUser.addEventListener('input', function () {
-        // À compléter : Recherche dynamique des utilisateurs par leur pseudo
+        const query = this.value;
+        if (query.length > 0) {
+            fetch(`/chat/private/search?query=${query}`)
+                .then(response => response.json())
+                .then(users => {
+                    userResults.innerHTML = '';
+                    userResults.classList.remove('d-none');
+                    users.forEach(user => {
+                        const li = document.createElement('li');
+                        li.textContent = user.pseudo;
+                        li.className = 'list-group-item';
+                        li.style.cursor = 'pointer';
+                        li.addEventListener('click', () => startPrivateChat(user.id, user.pseudo));
+                        userResults.appendChild(li);
+                    });
+                })
+                .catch(error => console.error('Erreur lors de la recherche d\'utilisateurs :', error));
+        } else {
+            userResults.classList.add('d-none');
+        }
     });
 
-    // Démarrer une conversation privée
     function startPrivateChat(receiverId, pseudo) {
-        // À compléter : Initialisation de la conversation privée avec un utilisateur
+        currentReceiverId = receiverId;
+        privateChatTitle.textContent = `Conversation privée avec ${pseudo}`;
+        document.getElementById('private-chat').style.display = 'flex';
+        loadMessages();
     }
 
-    // Fermeture de la conversation privée
     closePrivateChatButton.addEventListener('click', function () {
+        currentReceiverId = null;
+        document.getElementById('private-chat').style.display = 'none';
     });
 
-    // Gestion des émojis
     emojiPickerButton.addEventListener('click', function () {
-        // À compléter : Affichage du sélecteur d'émojis
+        emojiContainer.style.display = emojiContainer.style.display === 'none' ? 'block' : 'none';
     });
 
     emojiContainer.addEventListener('click', function (event) {
-        // À compléter : Ajout d'un émoji au champ de message
+        if (event.target.tagName === 'SPAN') {
+            messageInput.value += event.target.textContent;
+            messageInput.focus();
+        }
     });
 
     privateEmojiPickerButton.addEventListener('click', function () {
-        // À compléter : Affichage du sélecteur d'émojis privé
+        privateEmojiContainer.style.display = privateEmojiContainer.style.display === 'none' ? 'block' : 'none';
     });
 
     privateEmojiContainer.addEventListener('click', function (event) {
-        // À compléter : Ajout d'un émoji au champ de message privé
+        if (event.target.tagName === 'SPAN') {
+            privateMessageInput.value += event.target.textContent;
+            privateMessageInput.focus();
+        }
     });
 
-    // Gestion des envois de formulaire / chargement périodique
+    chatForm.addEventListener('submit', event => sendMessage(event, false));
+    privateChatForm.addEventListener('submit', event => sendMessage(event, true));
 
+    setInterval(loadMessages, 2000);
+    loadMessages();
 });

@@ -1,14 +1,31 @@
 <?php
+
 namespace App\Core;
 
 use PDO;
+use PDOException;
 
-class Database {
+class Database
+{
+    private static $instance = null;
 
-    // Instance unique de la connexion PDO
-    private static $instance;
+    public static function getInstance()
+    {
+        if (self::$instance === null) {
+            $servername = "localhost";
+            $dbname = "";
+            $username = "";
+            $password = "";
 
-    // Retourne l'instance PDO unique, connexion à la base de données
-    public static function getInstance() {
+            try {
+                self::$instance = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);
+                self::$instance->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            } catch (PDOException $e) {
+                error_log("Connection failed: " . $e->getMessage());
+                throw new PDOException("Une erreur est survenue lors de la connexion à la base de données.");
+            }
+        }
+
+        return self::$instance;
     }
 }
