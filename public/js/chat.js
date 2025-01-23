@@ -25,37 +25,52 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let currentReceiverId = null;
 
-    // Fonction pour charger les messages (chat global ou privé)
-    function loadMessages() {
-        const endpoint = currentReceiverId
-            ? `/chat/private/${currentReceiverId}/messages`
-            : '/chat/messages';
-
-        fetch(endpoint)
+    // Fonction pour charger les messages globaux
+    function loadGlobalMessages() {
+        fetch('/chat/messages')
             .then(response => response.json())
             .then(data => {
-                const targetBox = currentReceiverId ? privateChatBox : chatBox;
-                targetBox.innerHTML = '';
+                chatBox.innerHTML = '';
                 data.forEach(message => {
                     const messageElement = document.createElement('div');
                     messageElement.classList.add('message');
-                    const pseudo = message.sender_pseudo || message.pseudo || "Utilisateur";
+                    const pseudo = message.pseudo || "Utilisateur";
                     messageElement.innerHTML = `<strong>${pseudo} :</strong> ${message.content}`;
-                    targetBox.appendChild(messageElement);
+                    chatBox.appendChild(messageElement);
                 });
-                targetBox.scrollTop = targetBox.scrollHeight;
+                chatBox.scrollTop = chatBox.scrollHeight;
             })
-            .catch(error => console.error('Erreur lors du chargement des messages :', error));
+            .catch(error => console.error('Erreur lors du chargement des messages globaux :', error));
     }
 
-    // Fonction pour envoyer un message (chat global ou privé)
+    // Fonction pour charger les messages privés
+    function loadPrivateMessages() {
+        if (!currentReceiverId) return;
+
+        fetch(`/chat/private/${currentReceiverId}/messages`)
+            .then(response => response.json())
+            .then(data => {
+                privateChatBox.innerHTML = '';
+                data.forEach(message => {
+                    const messageElement = document.createElement('div');
+                    messageElement.classList.add('message');
+                    const pseudo = message.sender_pseudo || "Utilisateur";
+                    messageElement.innerHTML = `<strong>${pseudo} :</strong> ${message.content}`;
+                    privateChatBox.appendChild(messageElement);
+                });
+                privateChatBox.scrollTop = privateChatBox.scrollHeight;
+            })
+            .catch(error => console.error('Erreur lors du chargement des messages privés :', error));
+    }
+
+    // Fonction pour envoyer un message
     function sendMessage(event, isPrivate = false) {
         event.preventDefault();
         const message = isPrivate ? privateMessageInput.value : messageInput.value;
         const endpoint = isPrivate
             ? `/chat/private/${currentReceiverId}/send`
             : '/chat/send';
-    
+
         fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -66,14 +81,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (data.success) {
                     if (isPrivate) {
                         privateMessageInput.value = '';
-                        if (currentReceiverId && privateChatTitle.textContent.includes('avec')) {
-                            const pseudo = privateChatTitle.textContent.split('avec ')[1];
-                            addConversationToSidebar(currentReceiverId, pseudo);
-                        }
+                        loadPrivateMessages();
                     } else {
                         messageInput.value = '';
+                        loadGlobalMessages();
                     }
-                    loadMessages();
                 } else {
                     console.error('Erreur lors de l\'envoi du message :', data.error);
                 }
@@ -107,15 +119,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function loadConversations() {
         fetch('/chat/conversations')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Erreur lors de la récupération des conversations.');
-                }
-                return response.json();
-            })
+            .then(response => response.json())
             .then(conversations => {
-                const conversationList = document.getElementById('conversations-list');
-                conversationList.innerHTML = '';
+                conversationsList.innerHTML = '';
                 conversations.forEach(conversation => {
                     addConversationToSidebar(conversation.user_id, conversation.pseudo);
                 });
@@ -124,11 +130,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function addConversationToSidebar(receiverId, pseudo) {
-        const conversationList = document.getElementById('conversations-list');
-        if (!conversationList) return;
-
-        const existingItem = Array.from(conversationList.children).find(
-            (item) => item.dataset.userId === String(receiverId)
+        const existingItem = Array.from(conversationsList.children).find(
+            item => item.dataset.userId === String(receiverId)
         );
 
         if (!existingItem) {
@@ -138,7 +141,7 @@ document.addEventListener('DOMContentLoaded', function () {
             li.style.cursor = 'pointer';
             li.dataset.userId = receiverId;
             li.addEventListener('click', () => startPrivateChat(receiverId, pseudo));
-            conversationList.appendChild(li);
+            conversationsList.appendChild(li);
         }
     }
 
@@ -146,8 +149,7 @@ document.addEventListener('DOMContentLoaded', function () {
         currentReceiverId = receiverId;
         privateChatTitle.textContent = `Conversation privée avec ${pseudo}`;
         document.getElementById('private-chat').style.display = 'block';
-        loadMessages();
-
+        loadPrivateMessages();
         addConversationToSidebar(receiverId, pseudo);
     }
 
@@ -186,7 +188,11 @@ document.addEventListener('DOMContentLoaded', function () {
     chatForm.addEventListener('submit', event => sendMessage(event, false));
     privateChatForm.addEventListener('submit', event => sendMessage(event, true));
 
-    setInterval(loadMessages, 2000);
-    loadMessages();
+    setInterval(() => {
+        loadGlobalMessages();
+        loadPrivateMessages();
+    }, 2000);
+
+    loadGlobalMessages();
     loadConversations();
 });
