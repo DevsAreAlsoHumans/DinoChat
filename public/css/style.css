@@ -90,3 +90,56 @@ body {
     font-size: 1.5rem;
     margin-right: 5px;
 }
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    right: -300px;
+    width: 300px;
+    height: 100%;
+    background: #fff;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
+    transition: right 0.3s ease;
+    padding: 20px;
+    z-index: 1000;
+}
+
+.sidebar.open {
+    right: 0;
+}
+
+#sidebar-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1100;
+    background-color: #6c757d;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    cursor: pointer;
+}
+
+#sidebar-content {
+    padding: 10px;
+    overflow-y: auto;
+    max-height: calc(100vh - 60px);
+}
+
+.conversation-item {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    font-size: 1rem;
+}
+
+.conversation-item:hover {
+    background-color: #f0f0f0;
+    cursor: pointer;
+}
+
+

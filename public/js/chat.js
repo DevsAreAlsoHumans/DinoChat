@@ -1,10 +1,16 @@
 document.addEventListener('DOMContentLoaded', function () {
+    // Sélection des éléments du DOM
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const conversationsList = document.getElementById('conversations-list');
+
     const chatBox = document.getElementById('chat-box');
     const chatForm = document.getElementById('chat-form');
     const messageInput = document.getElementById('message-input');
 
     const searchUser = document.getElementById('search-user');
     const userResults = document.getElementById('user-results');
+
     const privateChatBox = document.getElementById('private-chat-box');
     const privateChatForm = document.getElementById('private-chat-form');
     const privateMessageInput = document.getElementById('private-message-input');
@@ -19,6 +25,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let currentReceiverId = null;
 
+    // Fonction pour charger les messages (chat global ou privé)
     function loadMessages() {
         const endpoint = currentReceiverId
             ? `/chat/private/${currentReceiverId}/messages`
@@ -41,13 +48,14 @@ document.addEventListener('DOMContentLoaded', function () {
             .catch(error => console.error('Erreur lors du chargement des messages :', error));
     }
 
+    // Fonction pour envoyer un message (chat global ou privé)
     function sendMessage(event, isPrivate = false) {
         event.preventDefault();
         const message = isPrivate ? privateMessageInput.value : messageInput.value;
         const endpoint = isPrivate
             ? `/chat/private/${currentReceiverId}/send`
             : '/chat/send';
-
+    
         fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -58,6 +66,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (data.success) {
                     if (isPrivate) {
                         privateMessageInput.value = '';
+                        if (currentReceiverId && privateChatTitle.textContent.includes('avec')) {
+                            const pseudo = privateChatTitle.textContent.split('avec ')[1];
+                            addConversationToSidebar(currentReceiverId, pseudo);
+                        }
                     } else {
                         messageInput.value = '';
                     }
@@ -67,8 +79,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             })
             .catch(error => console.error('Erreur lors de l\'envoi du message :', error));
-    }
+    }    
 
+    // Fonction pour rechercher des utilisateurs
     searchUser.addEventListener('input', function () {
         const query = this.value;
         if (query.length > 0) {
@@ -92,12 +105,53 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    function loadConversations() {
+        fetch('/chat/conversations')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erreur lors de la récupération des conversations.');
+                }
+                return response.json();
+            })
+            .then(conversations => {
+                const conversationList = document.getElementById('conversations-list');
+                conversationList.innerHTML = '';
+                conversations.forEach(conversation => {
+                    addConversationToSidebar(conversation.user_id, conversation.pseudo);
+                });
+            })
+            .catch(error => console.error('Erreur lors du chargement des conversations :', error));
+    }
+    
+
+    function addConversationToSidebar(receiverId, pseudo) {
+        const conversationList = document.getElementById('conversations-list');
+        if (!conversationList) return;
+    
+        const existingItem = Array.from(conversationList.children).find(
+            (item) => item.dataset.userId === String(receiverId)
+        );
+    
+        if (!existingItem) {
+            const li = document.createElement('li');
+            li.textContent = pseudo;
+            li.className = 'list-group-item';
+            li.style.cursor = 'pointer';
+            li.dataset.userId = receiverId;
+            li.addEventListener('click', () => startPrivateChat(receiverId, pseudo));
+            conversationList.appendChild(li);
+        }
+    }       
+    
+    
     function startPrivateChat(receiverId, pseudo) {
         currentReceiverId = receiverId;
         privateChatTitle.textContent = `Conversation privée avec ${pseudo}`;
-        document.getElementById('private-chat').style.display = 'flex';
+        document.getElementById('private-chat').style.display = 'block';
         loadMessages();
-    }
+    
+        addConversationToSidebar(receiverId, pseudo);
+    }    
 
     closePrivateChatButton.addEventListener('click', function () {
         currentReceiverId = null;
@@ -126,9 +180,14 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    sidebarToggle.addEventListener('click', function () {
+        sidebar.classList.toggle('open');
+    });
+
     chatForm.addEventListener('submit', event => sendMessage(event, false));
     privateChatForm.addEventListener('submit', event => sendMessage(event, true));
 
     setInterval(loadMessages, 2000);
     loadMessages();
+    loadConversations();
 });

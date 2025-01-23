@@ -38,4 +38,21 @@ class ChatController extends Controller {
             echo json_encode(['success' => false, 'error' => 'Message invalide ou utilisateur non authentifié.']);
         }
     }
+
+    public function getConversations()
+    {
+        if (!isset($_SESSION['user'])) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Utilisateur non authentifié.']);
+            return;
+        }
+
+        $userId = $_SESSION['user']['id'];
+        $chatModel = $this->model('PrivateChat');
+        $conversations = $chatModel->getConversations($userId);
+
+        header('Content-Type: application/json');
+        echo json_encode($conversations);
+    }
+    
 }

@@ -24,4 +24,22 @@ class PrivateChat {
         $stmt = $db->prepare("INSERT INTO private_messages (sender_id, receiver_id, content) VALUES (?, ?, ?)");
         $stmt->execute([$senderId, $receiverId, $content]);
     }
+
+    public function getConversations($userId) {
+        $db = Database::getInstance();
+        $stmt = $db->prepare("
+            SELECT DISTINCT
+                u.id AS user_id, u.pseudo
+            FROM private_messages pm
+            JOIN users u ON u.id = CASE
+                WHEN pm.sender_id = :userId THEN pm.receiver_id
+                ELSE pm.sender_id
+            END
+            WHERE :userId IN (pm.sender_id, pm.receiver_id)
+        ");
+        $stmt->bindParam(':userId', $userId, \PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }    
+    
 }

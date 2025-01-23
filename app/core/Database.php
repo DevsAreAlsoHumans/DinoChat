@@ -13,9 +13,9 @@ class Database
     {
         if (self::$instance === null) {
             $servername = "localhost";
-            $dbname = "";
-            $username = "";
-            $password = "";
+            $dbname = "qemi1281_chat_projet";
+            $username = "qemi1281_chat_projet";
+            $password = "iJw0f?$;rZT)";
 
             try {
                 self::$instance = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);

@@ -35,6 +35,9 @@ if ($uri === '/' || $uri === '/login') {
 } elseif ($uri === '/chat/messages') {
     $controller = new App\Controllers\ChatController();
     $controller->getMessages();
+} elseif ($uri === '/chat/conversations') {
+    $controller = new App\Controllers\ChatController();
+    $controller->getConversations();
 } elseif (preg_match('#^/chat/private/(\d+)/messages$#', $uri, $matches)) {
     $receiverId = $matches[1];
     $controller = new App\Controllers\PrivateChatController();
