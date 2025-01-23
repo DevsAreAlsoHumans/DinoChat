@@ -1,4 +1,8 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 session_start();
 
 require_once __DIR__ . '/app/core/Controller.php';
@@ -49,6 +53,13 @@ if ($uri === '/' || $uri === '/login') {
 } elseif ($uri === '/chat/private/search') {
     $controller = new App\Controllers\PrivateChatController();
     $controller->searchUsers();
+} elseif ($uri === '/chat/notifications') {
+    $controller = new App\Controllers\ChatController();
+    $controller->getNotifications();
+} elseif (preg_match('#^/chat/private/(\d+)/mark-read$#', $uri, $matches)) {
+    $receiverId = $matches[1];
+    $controller = new App\Controllers\ChatController();
+    $controller->markAsRead($receiverId);
 } else {
     http_response_code(404);
     echo "404 - Page not found.";

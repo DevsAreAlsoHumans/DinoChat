@@ -151,7 +151,122 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('private-chat').style.display = 'block';
         loadPrivateMessages();
         addConversationToSidebar(receiverId, pseudo);
+
+        markAsRead(receiverId);
     }
+
+    let previousUnreadCount = 0;
+    function loadNotifications() {
+        fetch('/chat/notifications')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                let totalUnread = 0;
+                const existingItems = Array.from(conversationsList.children);
+    
+                existingItems.forEach(li => {
+                    const userId = li.dataset.userId;
+                    const notification = data.find(convo => convo.sender_id === parseInt(userId));
+    
+                    if (notification) {
+                        updateNotificationBadge(li, notification.unread_count);
+                        totalUnread += notification.unread_count;
+                    } else {
+                        removeNotificationBadge(li);
+                    }
+                });
+    
+                data.forEach(conversation => {
+                    const existingItem = existingItems.find(
+                        li => li.dataset.userId === String(conversation.sender_id)
+                    );
+    
+                    if (!existingItem) {
+                        const li = document.createElement('li');
+                        li.textContent = conversation.sender_pseudo;
+                        li.className = 'list-group-item';
+                        li.style.cursor = 'pointer';
+                        li.dataset.userId = conversation.sender_id;
+    
+                        li.addEventListener('click', () => {
+                            startPrivateChat(conversation.sender_id, conversation.sender_pseudo);
+                            markAsRead(conversation.sender_id);
+                        });
+    
+                        updateNotificationBadge(li, conversation.unread_count);
+                        totalUnread += conversation.unread_count;
+    
+                        conversationsList.appendChild(li);
+                    }
+                });
+    
+                if (totalUnread > previousUnreadCount) {
+                    playNotificationSound();
+                }
+    
+                previousUnreadCount = totalUnread;
+            })
+            .catch(error => {
+                console.error('Erreur lors du chargement des notifications :', error);
+                alert('Une erreur est survenue lors de la récupération des notifications.');
+            });
+    }
+
+    function updateNotificationBadge(element, unreadCount) {
+        let badge = element.querySelector('.notification-badge');
+        if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'notification-badge';
+            element.appendChild(badge);
+        }
+        badge.textContent = unreadCount;
+    
+        if (unreadCount === 0) {
+            badge.style.display = 'none';
+        } else {
+            badge.style.display = 'inline-block';
+        }
+    }
+    
+    function removeNotificationBadge(element) {
+        const badge = element.querySelector('.notification-badge');
+        if (badge) {
+            badge.style.display = 'none';
+        }
+    }
+    
+    
+    
+    
+    function markAsRead(receiverId) {
+        fetch(`/chat/private/${receiverId}/mark-read`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Messages marqués comme lus.');
+                    const li = conversationsList.querySelector(`[data-user-id="${receiverId}"]`);
+                    if (li) {
+                        removeNotificationBadge(li);
+                    }
+                    loadNotifications();
+                }
+            })
+            .catch(error => console.error('Erreur lors de la mise à jour des messages :', error));
+    }
+    
+    
+
+    function playNotificationSound() {
+        const audio = new Audio('/public/sounds/notification.mp3');
+        audio.play().catch(error => console.error('Erreur lors de la lecture du son :', error));
+    } 
 
     closePrivateChatButton.addEventListener('click', function () {
         currentReceiverId = null;
@@ -195,4 +310,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     loadGlobalMessages();
     loadConversations();
+
+    setInterval(loadNotifications, 5000);
+    loadNotifications();
+    console.log('Cookies actuels :', document.cookie);
+
 });

@@ -39,8 +39,7 @@ class ChatController extends Controller {
         }
     }
 
-    public function getConversations()
-    {
+    public function getConversations() {
         if (!isset($_SESSION['user'])) {
             http_response_code(401);
             echo json_encode(['error' => 'Utilisateur non authentifié.']);
@@ -54,5 +53,45 @@ class ChatController extends Controller {
         header('Content-Type: application/json');
         echo json_encode($conversations);
     }
+
+    public function getNotifications() {
+        if (!isset($_SESSION['user'])) {
+            error_log("Session utilisateur non détectée.");
+            http_response_code(401);
+            echo json_encode(['error' => 'Utilisateur non authentifié.']);
+            return;
+        }
+        try {
+            $userId = $_SESSION['user']['id'];
+            $chatModel = $this->model('PrivateChat');
+            $notifications = $chatModel->getUnreadMessages($userId);
+    
+            header('Content-Type: application/json');
+            echo json_encode($notifications);
+        } catch (\Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Erreur serveur: ' . $e->getMessage()]);
+        }
+    }
+    
+    public function markAsRead($receiverId) {
+        if (!isset($_SESSION['user'])) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Utilisateur non authentifié.']);
+            return;
+        }
+    
+        try {
+            $userId = $_SESSION['user']['id'];
+            $chatModel = $this->model('PrivateChat');
+            $chatModel->markMessagesAsRead($userId, $receiverId);
+    
+            echo json_encode(['success' => true]);
+        } catch (\Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Erreur serveur : ' . $e->getMessage()]);
+        }
+    }
+    
     
 }

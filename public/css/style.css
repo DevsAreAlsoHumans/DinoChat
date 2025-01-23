@@ -135,3 +135,20 @@ body {
     background-color: #f0f0f0;
     cursor: pointer;
 }
+
+.notification-badge {
+    background-color: red;
+    color: white;
+    font-size: 0.8rem;
+    font-weight: bold;
+    border-radius: 50%;
+    padding: 5px 10px;
+    display: none;
+    margin-left: 10px;
+    text-align: center;
+}
+
+.notification-badge[style="display: inline-block;"] {
+    display: inline-block;
+}
+
