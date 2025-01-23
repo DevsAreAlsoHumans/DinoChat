@@ -45,34 +45,46 @@ class UserController extends Controller {
             $email = $_POST['email'] ?? null;
             $pseudo = $_POST['pseudo'] ?? null;
             $password = $_POST['password'] ?? null;
-
+    
             if (empty($email) || empty($pseudo) || empty($password)) {
-                echo "<div style='color: red; text-align: center;'>Tous les champs sont requis.</div>";
-                $this->view('user/register');
-                return;
+                $_SESSION['register_error'] = 'Tous les champs sont requis.';
+                header('Location: /register');
+                exit();
             }
-
+    
             if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                echo "<div style='color: red; text-align: center;'>Adresse e-mail invalide.</div>";
-                $this->view('user/register');
-                return;
+                $_SESSION['register_error'] = 'Adresse e-mail invalide.';
+                header('Location: /register');
+                exit();
+            }
+    
+            $passwordRegex = '/^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/';
+            if (!preg_match($passwordRegex, $password)) {
+                $_SESSION['register_error'] = 'Le mot de passe doit contenir au moins : 12 caractères, une majuscule, une minuscule, un chiffre, un caractère spécial.';
+                header('Location: /register');
+                exit();
             }
 
-            $userModel = $this->model('User');
             try {
+                $userModel = $this->model('User');
                 $userModel->register([
                     'email' => $email,
                     'pseudo' => $pseudo,
                     'password' => $password,
                 ]);
-
+    
+                $_SESSION['success_message'] = 'Inscription réussie. Connectez-vous !';
                 header('Location: /login');
                 exit();
             } catch (\Exception $e) {
-                echo "<div style='color: red; text-align: center;'>{$e->getMessage()}</div>";
+                $_SESSION['register_error'] = $e->getMessage();
+                header('Location: /register');
+                exit();
             }
         }
-
+    
         $this->view('user/register');
     }
+    
+    
 }

@@ -35,7 +35,7 @@ unset($_SESSION['register_error'], $_SESSION['success_message']);
                         <div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div>
                     <?php endif; ?>
 
-                    <form method="POST" action="/register">
+                    <form method="POST" action="/register" id="register-form">
                         <div class="mb-3">
                             <label for="email" class="form-label">Adresse e-mail</label>
                             <input type="email" class="form-control" id="email" name="email" placeholder="Entrez votre e-mail" required>
@@ -47,6 +47,10 @@ unset($_SESSION['register_error'], $_SESSION['success_message']);
                         <div class="mb-3">
                             <label for="password" class="form-label">Mot de passe</label>
                             <input type="password" class="form-control" id="password" name="password" placeholder="Entrez votre mot de passe" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirm-password" class="form-label">Confirmez le mot de passe</label>
+                            <input type="password" class="form-control" id="confirm-password" placeholder="Confirmez votre mot de passe" required>
                         </div>
                         <button type="submit" class="btn btn-success w-100">Créer un compte</button>
                     </form>
@@ -60,3 +64,22 @@ unset($_SESSION['register_error'], $_SESSION['success_message']);
     </div>
 </body>
 </html>
+
+<script>
+document.getElementById('register-form').addEventListener('submit', function(event) {
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm-password').value;
+
+    if (password !== confirmPassword) {
+        event.preventDefault();
+        alert("Les mots de passe ne correspondent pas !");
+        return;
+    }
+
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/;
+    if (!passwordRegex.test(password)) {
+        event.preventDefault();
+        alert("Le mot de passe ne respecte pas les normes :\n- Au moins 12 caractères\n- Une majuscule\n- Une minuscule\n- Un chiffre\n- Un caractère spécial.");
+    }
+});
+</script>
