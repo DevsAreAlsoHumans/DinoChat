@@ -103,6 +103,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     privateChatBox.appendChild(messageElement);
                 });
                 privateChatBox.scrollTop = privateChatBox.scrollHeight;
+                if (currentReceiverId !== recentlyClosedReceiverId) {
+                    playNotificationSound();
+                }
             })
             .catch(error => console.error('Erreur lors du chargement des messages privés :', error));
     }
@@ -212,38 +215,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 let totalUnread = 0;
                 const existingItems = Array.from(conversationsList.children);
     
-                existingItems.forEach(li => {
-                    const userId = parseInt(li.dataset.userId);
-                    const notification = data.find(convo => convo.sender_id === userId);
-    
-                    if (notification) {
-                        if (parseInt(currentReceiverId) === userId) {
-                            console.log(`Pas de notification pour ${userId} car la conversation est active.`);
-                            removeNotificationBadge(li);
-                        } else if (parseInt(recentlyClosedReceiverId) === userId) {
-                            console.log(`Pas de notification pour ${userId} car la conversation a été récemment fermée.`);
-                        } else {
-                            const previousCount = parseInt(li.querySelector('.notification-badge')?.textContent || 0);
-                            updateNotificationBadge(li, notification.unread_count);
-                    
-                            if (notification.unread_count > previousCount) {
-                                playNotificationSound();
-                            }
-                    
-                            totalUnread += notification.unread_count;
-                            console.log(`Notification pour ${userId}.`);
-                        }
-                    } else {
-                        removeNotificationBadge(li);
-                    }
-                });
-    
                 data.forEach(conversation => {
                     const existingItem = existingItems.find(
                         li => parseInt(li.dataset.userId) === conversation.sender_id
                     );
     
-                    if (!existingItem) {
+                    if (existingItem) {
+                        const previousUnread = parseInt(existingItem.querySelector('.notification-badge')?.textContent || 0);
+                        updateNotificationBadge(existingItem, conversation.unread_count);
+    
+                        if (conversation.unread_count > previousUnread) {
+                            playNotificationSound();
+                        }
+                    } else {
                         const li = document.createElement('li');
                         li.textContent = conversation.sender_pseudo;
                         li.className = 'list-group-item';
@@ -255,20 +239,14 @@ document.addEventListener('DOMContentLoaded', function () {
                             markAsRead(conversation.sender_id);
                         });
     
-                        if (
-                            parseInt(currentReceiverId) !== conversation.sender_id &&
-                            parseInt(recentlyClosedReceiverId) !== conversation.sender_id
-                        ) {
-                            updateNotificationBadge(li, conversation.unread_count);
-                            totalUnread += conversation.unread_count;
-                            playNotificationSound();
-                        }
-    
+                        updateNotificationBadge(li, conversation.unread_count);
                         conversationsList.appendChild(li);
+
+                        playNotificationSound();
                     }
+                    totalUnread += conversation.unread_count;
                 });
     
-                // Mettre à jour le badge global
                 const menuBadge = document.getElementById('menu-notification-badge');
                 if (menuBadge) {
                     if (totalUnread > 0) {
@@ -279,8 +257,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }
     
-                // Met à jour la valeur précédente
-                previousUnreadCount = totalUnread;
+                console.log('Notifications chargées avec succès.');
             })
             .catch(error => {
                 console.error('Erreur lors du chargement des notifications :', error);
@@ -288,8 +265,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     
-    
-
     function updateNotificationBadge(element, unreadCount) {
         let badge = element.querySelector('.notification-badge');
         if (!badge) {
