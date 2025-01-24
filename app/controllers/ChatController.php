@@ -15,7 +15,7 @@ class ChatController extends Controller {
 
     public function getMessages() {
         $chatModel = $this->model('Chat');
-        $messages = $chatModel->getAllMessages();
+        $messages = $chatModel->getAllMessages(100, 0);
 
         header('Content-Type: application/json');
         echo json_encode($messages);

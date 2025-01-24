@@ -36,16 +36,16 @@ document.addEventListener('DOMContentLoaded', function () {
         userPseudoElement.textContent = "Utilisateur";
     }
 
-    console.log("Pseudo utilisateur dans les paramètres : ", userPseudo);
+    // console.log("Pseudo utilisateur dans les paramètres : ", userPseudo);
 
     settingsButton.addEventListener('click', () => {
         settingsModal.style.display = 'block';
-        console.log('Fenêtre des paramètres ouverte.');
+        // console.log('Fenêtre des paramètres ouverte.');
     });
 
     closeSettingsButton.addEventListener('click', () => {
         settingsModal.style.display = 'none';
-        console.log('Fenêtre des paramètres fermée.');
+        // console.log('Fenêtre des paramètres fermée.');
     });
 
     const notificationSoundIcon = document.getElementById('notification-sound-icon');
@@ -59,35 +59,78 @@ document.addEventListener('DOMContentLoaded', function () {
         if (soundEnabled) {
             notificationSoundIcon.src = '/public/images/sound-icon.png';
             toggleSoundText.textContent = 'Retirer le son des notifications';
-            console.log('Son activé.');
+            // console.log('Son activé.');
         } else {
             notificationSoundIcon.src = '/public/images/sound-off-icon.png';
             toggleSoundText.textContent = 'Activer le son des notifications';
-            console.log('Son désactivé.');
+            // console.log('Son désactivé.');
         }
     });
 
     let currentReceiverId = null;
 
-    // Fonction pour charger les messages globaux
+    let isLoadingGlobalMessages = false;
+
+    // Pour garder une trace du dernier message chargé
+    let lastMessageId = null;
+
+    let notifiedGlobalMessages = new Set();
+
     function loadGlobalMessages() {
+        if (isLoadingGlobalMessages) return;
+        isLoadingGlobalMessages = true;
+
         fetch('/chat/messages')
             .then(response => response.json())
             .then(data => {
-                chatBox.innerHTML = '';
-                data.forEach(message => {
-                    const messageElement = document.createElement('div');
-                    messageElement.classList.add('message');
-                    const pseudo = message.pseudo || "Utilisateur";
-                    messageElement.innerHTML = `<strong>${pseudo} :</strong> ${message.content}`;
-                    chatBox.appendChild(messageElement);
-                });
-                chatBox.scrollTop = chatBox.scrollHeight;
+                // console.log("Messages globaux reçus :", data);
+
+                const newMessages = data.filter(message => !lastMessageId || message.id > lastMessageId);
+
+                if (newMessages.length > 0) {
+                    newMessages.forEach(message => {
+                        if (!message.id) {
+                            console.error("Erreur : ID de message manquant pour ce message :", message);
+                            return;
+                        }
+
+                        const messageElement = document.createElement('div');
+                        messageElement.classList.add('message');
+                        const pseudo = message.pseudo || "Utilisateur";
+                        messageElement.innerHTML = `
+                            <strong>${pseudo} :</strong> ${message.content}
+                            <div class="reactions" data-message-id="${message.id}">
+                                <span class="add-reaction">➕</span>
+                            </div>
+                        `;
+                        chatBox.appendChild(messageElement);
+                        loadReactions(message.id, messageElement.querySelector('.reactions'));
+
+                        if (!notifiedGlobalMessages.has(message.id)) {
+                            // playNotificationSound();
+                            notifiedGlobalMessages.add(message.id);
+                        }
+                    });
+
+                    lastMessageId = newMessages[newMessages.length - 1].id;
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                } else {
+                    // console.log("Aucun nouveau message.");
+                }
             })
-            .catch(error => console.error('Erreur lors du chargement des messages globaux :', error));
+            .catch(error => console.error('Erreur lors du chargement des messages globaux :', error))
+            .finally(() => {
+                isLoadingGlobalMessages = false;
+            });
     }
 
+
+
+    
+
     // Fonction pour charger les messages privés
+    let notifiedPrivateMessages = new Set();
+
     function loadPrivateMessages() {
         if (!currentReceiverId) return;
 
@@ -101,14 +144,127 @@ document.addEventListener('DOMContentLoaded', function () {
                     const pseudo = message.sender_pseudo || "Utilisateur";
                     messageElement.innerHTML = `<strong>${pseudo} :</strong> ${message.content}`;
                     privateChatBox.appendChild(messageElement);
+
+                    if (!notifiedPrivateMessages.has(message.id)) {
+                        // playNotificationSound();
+                        notifiedPrivateMessages.add(message.id);
+                    }
                 });
                 privateChatBox.scrollTop = privateChatBox.scrollHeight;
-                if (currentReceiverId !== recentlyClosedReceiverId) {
-                    playNotificationSound();
-                }
             })
             .catch(error => console.error('Erreur lors du chargement des messages privés :', error));
     }
+
+
+    function loadReactions(messageId, container) {
+        if (!messageId) {
+            console.error('Erreur : messageId est indéfini.');
+            return;
+        }
+    
+        const previousReactions = container.dataset.reactions || "[]"; // Récupérer les réactions précédentes
+        const parsedPreviousReactions = JSON.parse(previousReactions);
+    
+        fetch(`/reactions/${messageId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const newReactions = data.reactions;
+                    if (JSON.stringify(parsedPreviousReactions) === JSON.stringify(newReactions)) {
+                        // console.log(`Aucune nouvelle réaction pour le message ID : ${messageId}`);
+                        return;
+                    }
+    
+                    // console.log(`Nouvelles réactions pour le message ID : ${messageId}`, newReactions);
+    
+                    container.innerHTML = newReactions.map(reaction => `
+                        <span class="reaction" title="Ajouté par ${reaction.user_pseudo} à ${new Date(reaction.created_at).toLocaleString()}">
+                            ${reaction.emoji}
+                        </span>
+                    `).join('');
+                    container.innerHTML += '<span class="add-reaction">➕</span>';
+    
+                    container.dataset.reactions = JSON.stringify(newReactions);
+                } else {
+                    console.error(`Aucune réaction trouvée pour le message ID : ${messageId}`);
+                }
+            })
+            .catch(error => console.error('Erreur lors du chargement des réactions :', error));
+    }
+    
+    
+    
+    function showEmojiPickerForMessage(messageId, targetElement) {
+        const emojiPicker = document.getElementById('emoji-picker');
+    
+        if (!emojiPicker) {
+            console.error("Le sélecteur d'émojis (emoji-picker) n'existe pas dans le DOM.");
+            return;
+        }
+    
+        emojiPicker.style.display = 'block';
+    
+        const rect = targetElement.getBoundingClientRect();
+        emojiPicker.style.position = 'absolute';
+        emojiPicker.style.left = `${rect.left}px`;
+        emojiPicker.style.top = `${rect.bottom + window.scrollY}px`;
+    
+        emojiPicker.innerHTML = '😀 😂 😍 👍 ❤️ 🔥 🎉 😢 😡 🙏'.split(' ')
+            .map(emoji => `<span class="emoji">${emoji}</span>`)
+            .join('');
+    
+        emojiPicker.addEventListener('click', function handleEmojiClick(event) {
+            if (event.target.classList.contains('emoji')) {
+                const emoji = event.target.textContent;
+    
+                addReaction(messageId, emoji);
+    
+                emojiPicker.style.display = 'none';
+                emojiPicker.removeEventListener('click', handleEmojiClick);
+            }
+        });
+        document.addEventListener('click', function handleClickOutside(event) {
+            if (!emojiPicker.contains(event.target) && event.target !== targetElement) {
+                emojiPicker.style.display = 'none';
+                document.removeEventListener('click', handleClickOutside);
+            }
+        }, { once: true });
+    }    
+
+    document.addEventListener('click', function (event) {
+        if (event.target.classList.contains('add-reaction')) {
+            const messageId = event.target.parentElement.dataset.messageId;
+            if (!messageId) {
+                console.error('Erreur : messageId manquant pour ajouter une réaction.');
+                return;
+            }
+            showEmojiPickerForMessage(messageId, event.target);
+        }
+    });
+    
+
+    function addReaction(messageId, emoji) {
+        fetch('/reactions/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message_id: messageId, emoji }),
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // console.log(`Réaction "${emoji}" ajoutée au message ID : ${messageId}`);
+                    const container = document.querySelector(`[data-message-id="${messageId}"]`);
+                    loadReactions(messageId, container);
+                } else {
+                    console.error('Erreur lors de l\'ajout de la réaction :', data.message);
+                }
+            })
+            .catch(error => console.error('Erreur lors de l\'ajout de la réaction :', error));
+    }
+    
+        
+    
+    
 
     // Fonction pour envoyer un message
     function sendMessage(event, isPrivate = false) {
@@ -203,29 +359,40 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     let previousUnreadCount = 0;
+    let notifiedPrivateConversations = new Set();
+    let isLoadingNotifications = false;
+    
     function loadNotifications() {
+        if (isLoadingNotifications) return;
+        isLoadingNotifications = true;
+
         fetch('/chat/notifications')
             .then(response => {
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error(`Erreur HTTP ! statut : ${response.status}`);
                 }
                 return response.json();
             })
             .then(data => {
+                // console.log("Notifications reçues :", data);
+
                 let totalUnread = 0;
                 const existingItems = Array.from(conversationsList.children);
-    
+
                 data.forEach(conversation => {
                     const existingItem = existingItems.find(
                         li => parseInt(li.dataset.userId) === conversation.sender_id
                     );
-    
+
                     if (existingItem) {
-                        const previousUnread = parseInt(existingItem.querySelector('.notification-badge')?.textContent || 0);
                         updateNotificationBadge(existingItem, conversation.unread_count);
-    
-                        if (conversation.unread_count > previousUnread) {
-                            playNotificationSound();
+
+                        if (
+                            conversation.unread_count > 0 &&
+                            !notifiedPrivateConversations.has(conversation.sender_id)
+                        ) {
+                            playNotificationSound(); //ici
+                            notifiedPrivateConversations.add(conversation.sender_id);
                         }
                     } else {
                         const li = document.createElement('li');
@@ -233,20 +400,24 @@ document.addEventListener('DOMContentLoaded', function () {
                         li.className = 'list-group-item';
                         li.style.cursor = 'pointer';
                         li.dataset.userId = conversation.sender_id;
-    
+
                         li.addEventListener('click', () => {
                             startPrivateChat(conversation.sender_id, conversation.sender_pseudo);
                             markAsRead(conversation.sender_id);
                         });
-    
+
                         updateNotificationBadge(li, conversation.unread_count);
                         conversationsList.appendChild(li);
 
-                        playNotificationSound();
+                        if (!notifiedPrivateConversations.has(conversation.sender_id)) {
+                            // playNotificationSound();
+                            notifiedPrivateConversations.add(conversation.sender_id);
+                        }
                     }
+
                     totalUnread += conversation.unread_count;
                 });
-    
+
                 const menuBadge = document.getElementById('menu-notification-badge');
                 if (menuBadge) {
                     if (totalUnread > 0) {
@@ -256,20 +427,23 @@ document.addEventListener('DOMContentLoaded', function () {
                         menuBadge.style.display = 'none';
                     }
                 }
-    
-                console.log('Notifications chargées avec succès.');
+
+                // console.log('Notifications mises à jour avec succès.');
             })
             .catch(error => {
                 console.error('Erreur lors du chargement des notifications :', error);
+            })
+            .finally(() => {
+                isLoadingNotifications = false;
             });
     }
     
-    
+    // Fonction pour mettre à jour le badge de notification d'une conversation
     function updateNotificationBadge(element, unreadCount) {
         let badge = element.querySelector('.notification-badge');
         if (!badge) {
             badge = document.createElement('span');
-            badge.className = 'notification-badge';
+            badge.className = 'notification-badge badge bg-danger ms-2';
             element.appendChild(badge);
         }
         badge.textContent = unreadCount;
@@ -299,7 +473,7 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    console.log('Messages marqués comme lus.');
+                    // console.log('Messages marqués comme lus.');
                     const li = conversationsList.querySelector(`[data-user-id="${receiverId}"]`);
                     if (li) {
                         removeNotificationBadge(li);
@@ -325,10 +499,10 @@ document.addEventListener('DOMContentLoaded', function () {
         currentReceiverId = null;
         document.getElementById('private-chat').style.display = 'none';
     
-        console.log(`Conversation avec ${recentlyClosedReceiverId} fermée.`);
+        // console.log(`Conversation avec ${recentlyClosedReceiverId} fermée.`);
     
         setTimeout(() => {
-            console.log(`Réinitialisation de recentlyClosedReceiverId pour ${recentlyClosedReceiverId}`);
+            // console.log(`Réinitialisation de recentlyClosedReceiverId pour ${recentlyClosedReceiverId}`);
             recentlyClosedReceiverId = null;
         }, 5000);
     });
@@ -363,19 +537,46 @@ document.addEventListener('DOMContentLoaded', function () {
         sidebar.classList.toggle('open');
     });
 
+    //COOKIE
+        const cookieBanner = document.getElementById('cookie-banner'); 
+        const acceptCookiesBtn = document.getElementById('accept-cookies');
+        const rejectCookiesBtn = document.getElementById('reject-cookies');
+
+        if (localStorage.getItem('cookiesAccepted') !== null) {
+            cookieBanner.style.display = 'none';
+            soundEnabled = true;
+        }
+    
+        acceptCookiesBtn.addEventListener('click', () => {
+            // console.log('Accepter les cookies : clic détecté');
+            localStorage.setItem('cookiesAccepted', 'true');
+            cookieBanner.style.display = 'none';
+            soundEnabled = true;
+        });
+    
+        rejectCookiesBtn.addEventListener('click', () => {
+            // console.log('Refuser les cookies : clic détecté');
+            localStorage.setItem('cookiesAccepted', 'false');
+            cookieBanner.style.display = 'none';
+            soundEnabled = true;
+        });
+
+    
+    
+    
     chatForm.addEventListener('submit', event => sendMessage(event, false));
     privateChatForm.addEventListener('submit', event => sendMessage(event, true));
 
     setInterval(() => {
         loadGlobalMessages();
         loadPrivateMessages();
-    }, 2000);
+    }, 5000);   
 
     loadGlobalMessages();
     loadConversations();
 
     setInterval(loadNotifications, 5000);
     loadNotifications();
-    console.log('Cookies actuels :', document.cookie);
+    // console.log('Cookies actuels :', document.cookie);
 
 });

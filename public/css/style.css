@@ -249,3 +249,28 @@ body {
     }
 }
 
+.emoji-picker {
+    position: absolute;
+    background-color: white;
+    border: 1px solid #ccc;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    padding: 10px;
+    border-radius: 8px;
+    z-index: 1000;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.emoji-picker .emoji {
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+#cookie-banner, #accept-cookies, #reject-cookies {
+    z-index: 10000 !important;
+    pointer-events: auto !important;
+}
+#accept-cookies, #reject-cookies {
+    border: 2px solid yellow !important;
+}
