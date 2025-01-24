@@ -31,7 +31,7 @@ DinoChat est une application de chat en ligne permettant aux utilisateurs de com
 - **Émojis** : Les utilisateurs peuvent insérer des émojis dans leurs messages grâce à un bouton dédié.
 - **Réactions** :
   - Les utilisateurs peuvent réagir aux messages avec des émojis.
-  - Les réactions sont visibles sous chaque message avec le nombre d’utilisateurs ayant réagi.
+  - Les réactions sont visibles sous chaque message avec le nombre d’utilisateurs ayant réagi dans le chat global.
 
 ---
 
@@ -57,7 +57,6 @@ DinoChat est une application de chat en ligne permettant aux utilisateurs de com
 ### Pages
 - **Connexion/Inscription** : Interface claire et responsive avec champs intuitifs pour pseudo, email, et mot de passe.
 - **Chat Global** : Liste de messages avec :
-  - Avatar utilisateur.
   - Pseudo.
   - Contenu du message.
   - Heure d’envoi.
