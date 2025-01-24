@@ -82,3 +82,123 @@ DinoChat est une application de chat en ligne permettant aux utilisateurs de com
 - Les données utilisateur sont sécurisées.
 
 ---
+---
+---
+
+# DinoChat - Note de Cadrage
+
+## **Contexte de la demande**
+Le projet **DinoChat** répond au besoin d'une application de messagerie en ligne permettant une communication instantanée entre utilisateurs à travers un chat global et des messages privés.  
+L'objectif principal est de proposer une solution web (excluant le mobile) offrant une expérience fluide, interactive et moderne tout en intégrant des fonctionnalités conviviales telles que l'ajout d'émojis et de réactions.
+
+---
+
+## **Environnement**
+- **Technologies** :
+  - Backend : PHP
+  - Base de données : MySQL
+  - Frontend : HTML, CSS, JavaScript (AJAX ou WebSocket pour la mise à jour en temps réel)
+- **Sécurité** :
+  - Hashage des mots de passe
+  - Prévention des attaques XSS/CSRF
+  - Validation des données utilisateur côté serveur
+- **Utilisation cible** :  
+  - L’application sera accessible exclusivement sur navigateur web et optimisée pour un usage desktop.
+
+---
+
+## **Opportunité & Faisabilité**
+### **Opportunité**  
+Répondre à la demande croissante d’outils de communication simples mais interactifs, adaptés à des échanges professionnels ou personnels.  
+
+### **Faisabilité**
+- **Techniques** :  
+  Les technologies retenues sont courantes et maîtrisées par les équipes.
+- **Financières** :  
+  Une solution économiquement viable grâce à l'utilisation d'outils open source.
+- **Temps** :  
+  Le périmètre du projet est adapté à un délai réaliste pour un MVP.
+
+---
+
+## **Le constat de la demande**
+- **Pourquoi** :  
+  Le besoin est de créer une plateforme unique et intuitive pour une communication fluide et interactive.  
+- **Pour quoi** :  
+  Offrir un espace digital permettant des échanges instantanés et attractifs grâce à des fonctionnalités modernes comme les émojis et les réactions.
+
+---
+
+## **Les enjeux**
+1. **Techniques** :  
+   Développer un système de messagerie en temps réel performant et sécurisé.
+2. **Expérience utilisateur** :  
+   Garantir une interface simple et agréable, favorisant l'adoption.
+3. **Sécurité** :  
+   Assurer la confidentialité des données utilisateurs et des échanges.
+
+---
+
+## **Gains et pertes**
+### **Gains**
+- Mise à disposition d’un outil moderne et efficace.
+- Fidélisation des utilisateurs grâce à une expérience interactive.
+
+### **Pertes**
+- Potentiel manque d’audience mobile dans la première version.
+
+---
+
+## **L’objet de la demande**
+- **Demande** :  
+  Développer une application web de chat offrant :
+  - Un chat global.
+  - Des messages privés avec recherche d’utilisateurs.
+  - Un système d’émojis et de réactions.
+- **Projet** :  
+  Création d’un MVP (Minimum Viable Product).
+- **Idée** :  
+  Une plateforme simple mais attractive, orientée vers la communication en temps réel.
+
+---
+
+## **Les objectifs et le résultat attendu**
+### **Objectifs**
+1. Création d’un chat global fonctionnel.
+2. Mise en place d’une messagerie privée avec notifications.
+3. Intégration d’émojis et de réactions.
+
+### **Résultats attendus**
+- Application intuitive et performante.
+- Mise à jour des messages en temps réel.
+- Fonctionnalités sécurisées pour les utilisateurs.
+
+### **Coût, Qualité, Délais (CQT)**
+- **Coût** :  
+  Utilisation de technologies open source pour réduire les coûts.
+- **Qualité** :  
+  Interface moderne et fonctionnalités stables.
+- **Délais** :  
+  Lancement d’un MVP dans un délai de 1 à 2 jours.
+
+---
+
+## **Le périmètre de la mission**
+### **Processus inclus**
+1. Développement backend et frontend.
+2. Mise en place d’une base de données sécurisée.
+3. Intégration d’émojis et de réactions.
+
+### **Cahier des charges (CDC)**  
+Respect des fonctionnalités clés définies dans le CDC.
+
+### **Parties prenantes**
+| **Rôle**           | **Responsabilité**                  |
+|---------------------|-------------------------------------|
+| **Chef de projet**  | Coordination et suivi du développement  Sacha |
+| **Développeurs**    | Développement des fonctionnalités (backend/frontend)  Marius |
+
+
+---
+
+_Ce document sert de cadre structuré pour la planification et le suivi du projet DinoChat._
