@@ -23,6 +23,50 @@ document.addEventListener('DOMContentLoaded', function () {
     const privateEmojiContainer = document.getElementById('private-emoji-container');
     const privateEmojiPickerButton = document.getElementById('private-emoji-picker-button');
 
+    // Gestion de l'écrou
+    const settingsButton = document.getElementById('settings-button');
+    const settingsModal = document.getElementById('settings-modal');
+    const closeSettingsButton = document.getElementById('close-settings');
+
+    const userPseudoElement = document.getElementById('user-pseudo');
+    
+    if (typeof userPseudo !== 'undefined' && userPseudo) {
+        userPseudoElement.textContent = userPseudo;
+    } else {
+        userPseudoElement.textContent = "Utilisateur";
+    }
+
+    console.log("Pseudo utilisateur dans les paramètres : ", userPseudo);
+
+    settingsButton.addEventListener('click', () => {
+        settingsModal.style.display = 'block';
+        console.log('Fenêtre des paramètres ouverte.');
+    });
+
+    closeSettingsButton.addEventListener('click', () => {
+        settingsModal.style.display = 'none';
+        console.log('Fenêtre des paramètres fermée.');
+    });
+
+    const notificationSoundIcon = document.getElementById('notification-sound-icon');
+    const toggleSoundText = document.getElementById('toggle-sound');
+
+    // État du son
+    let soundEnabled = true;
+
+    notificationSoundIcon.addEventListener('click', () => {
+        soundEnabled = !soundEnabled;
+        if (soundEnabled) {
+            notificationSoundIcon.src = '/public/images/sound-icon.png';
+            toggleSoundText.textContent = 'Retirer le son des notifications';
+            console.log('Son activé.');
+        } else {
+            notificationSoundIcon.src = '/public/images/sound-off-icon.png';
+            toggleSoundText.textContent = 'Activer le son des notifications';
+            console.log('Son désactivé.');
+        }
+    });
+
     let currentReceiverId = null;
 
     // Fonction pour charger les messages globaux
@@ -165,7 +209,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 return response.json();
             })
             .then(data => {
-                let totalUnread = 0; // Compteur total des notifications
+                let totalUnread = 0;
                 const existingItems = Array.from(conversationsList.children);
     
                 existingItems.forEach(li => {
@@ -173,29 +217,27 @@ document.addEventListener('DOMContentLoaded', function () {
                     const notification = data.find(convo => convo.sender_id === userId);
     
                     if (notification) {
-                        // Si l'utilisateur est déjà dans la conversation privée active ou récemment fermée
-                        if (parseInt(currentReceiverId) === userId || parseInt(recentlyClosedReceiverId) === userId) {
-                            console.log(`Pas de notification pour ${userId} car la conversation est active ou récemment fermée.`);
-                            removeNotificationBadge(li); // Retirer le badge pour l'utilisateur actif
+                        if (parseInt(currentReceiverId) === userId) {
+                            console.log(`Pas de notification pour ${userId} car la conversation est active.`);
+                            removeNotificationBadge(li);
+                        } else if (parseInt(recentlyClosedReceiverId) === userId) {
+                            console.log(`Pas de notification pour ${userId} car la conversation a été récemment fermée.`);
                         } else {
-                            // Sinon, afficher le badge de notification et jouer le son
                             const previousCount = parseInt(li.querySelector('.notification-badge')?.textContent || 0);
                             updateNotificationBadge(li, notification.unread_count);
-    
+                    
                             if (notification.unread_count > previousCount) {
-                                playNotificationSound(); // Joue le son pour une nouvelle notification
+                                playNotificationSound();
                             }
-    
+                    
                             totalUnread += notification.unread_count;
                             console.log(`Notification pour ${userId}.`);
                         }
                     } else {
-                        // Supprimer le badge si aucune notification
                         removeNotificationBadge(li);
                     }
                 });
     
-                // Ajouter de nouvelles conversations si elles n'existent pas encore
                 data.forEach(conversation => {
                     const existingItem = existingItems.find(
                         li => parseInt(li.dataset.userId) === conversation.sender_id
@@ -213,14 +255,13 @@ document.addEventListener('DOMContentLoaded', function () {
                             markAsRead(conversation.sender_id);
                         });
     
-                        // On n'affiche une notification que si ce n'est pas l'utilisateur actif ou récemment fermé
                         if (
                             parseInt(currentReceiverId) !== conversation.sender_id &&
                             parseInt(recentlyClosedReceiverId) !== conversation.sender_id
                         ) {
                             updateNotificationBadge(li, conversation.unread_count);
                             totalUnread += conversation.unread_count;
-                            playNotificationSound(); // Joue le son pour une nouvelle conversation
+                            playNotificationSound();
                         }
     
                         conversationsList.appendChild(li);
@@ -297,10 +338,10 @@ document.addEventListener('DOMContentLoaded', function () {
     
 
     function playNotificationSound() {
+        if (!soundEnabled) return;
         const audio = new Audio('/public/sounds/notification.mp3');
         audio.play().catch(error => console.error('Erreur lors de la lecture du son :', error));
-    } 
-
+    }
     closePrivateChatButton.addEventListener('click', function () {
         if (currentReceiverId !== null) {
             markAsRead(currentReceiverId);
@@ -309,10 +350,14 @@ document.addEventListener('DOMContentLoaded', function () {
         currentReceiverId = null;
         document.getElementById('private-chat').style.display = 'none';
     
+        console.log(`Conversation avec ${recentlyClosedReceiverId} fermée.`);
+    
         setTimeout(() => {
+            console.log(`Réinitialisation de recentlyClosedReceiverId pour ${recentlyClosedReceiverId}`);
             recentlyClosedReceiverId = null;
         }, 5000);
     });
+        
     
     
 

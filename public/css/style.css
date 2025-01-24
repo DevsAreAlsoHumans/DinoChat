@@ -151,3 +151,101 @@ body {
 .notification-badge[style="display: inline-block;"] {
     display: inline-block;
 }
+
+/* Style de l'écrou denté */
+.settings-icon {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    cursor: pointer;
+    width: 50px;
+    height: 50px;
+    transition: transform 0.3s ease;
+}
+
+.settings-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.settings-icon:hover {
+    transform: rotate(180deg); /* Demi-tour au survol */
+}
+
+/* Style de la fenêtre modale */
+.settings-modal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 500px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    z-index: 2000;
+    animation: fadeIn 0.5s;
+}
+
+.settings-modal-content {
+    padding: 20px;
+    position: relative;
+}
+
+.settings-modal-content h2 {
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    text-align: center;
+}
+
+.settings-option {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+.settings-option img {
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.settings-option span {
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.settings-option:hover img {
+    transform: scale(1.2);
+}
+
+/* Bouton de fermeture */
+.close-settings {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    cursor: pointer;
+    color: #666;
+    transition: color 0.3s ease;
+}
+
+.close-settings:hover {
+    color: #ff0000;
+}
+
+/* Animation fade-in */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+

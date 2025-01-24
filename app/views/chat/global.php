@@ -4,10 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Global - DinoChat</title>
+
+    <?php
+    if (!isset($_SESSION['user']['pseudo'])) {
+        $_SESSION['user']['pseudo'] = 'Utilisateur'; // Valeur par défaut
+    }
+    ?>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="/public/css/style.css" rel="stylesheet">
 </head>
 <body>
+    <!-- Écrou denté pour accéder aux paramètres -->
+    <div id="settings-button" class="settings-icon">
+        <img src="/public/images/settings-icon.png" alt="Paramètres" />
+    </div>
+
+    <!-- Fenêtre modale des paramètres -->
+    <div id="settings-modal" class="settings-modal">
+        <div class="settings-modal-content">
+            <span id="close-settings" class="close-settings">&times;</span>
+            <h2>Bienvenue dans vos paramètres, <span id="user-pseudo"></span> !</h2>
+            <div class="settings-option">
+                <img id="notification-sound-icon" src="/public/images/sound-icon.png" alt="Son activé" />
+                <span id="toggle-sound">Retirer le son des notifications</span>
+            </div>
+        </div>
+    </div>
+
     <!-- Barre latérale -->
     <div id="sidebar" class="sidebar">
         <button id="sidebar-toggle" class="btn btn-secondary">☰ <span id="menu-notification-badge" class="badge bg-danger position-absolute start-0 top-0 translate-middle">
@@ -87,6 +111,9 @@
         </div>
     </div>
 
+    <script>
+        const userPseudo = "<?php echo htmlspecialchars($_SESSION['user']['pseudo'] ?? 'Utilisateur'); ?>";
+    </script>
     <script src="/public/js/chat.js"></script>
 </body>
 </html>
