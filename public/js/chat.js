@@ -165,24 +165,40 @@ document.addEventListener('DOMContentLoaded', function () {
                 return response.json();
             })
             .then(data => {
-                let totalUnread = 0;
+                let totalUnread = 0; // Compteur total des notifications
                 const existingItems = Array.from(conversationsList.children);
     
                 existingItems.forEach(li => {
-                    const userId = li.dataset.userId;
-                    const notification = data.find(convo => convo.sender_id === parseInt(userId));
+                    const userId = parseInt(li.dataset.userId);
+                    const notification = data.find(convo => convo.sender_id === userId);
     
                     if (notification) {
-                        updateNotificationBadge(li, notification.unread_count);
-                        totalUnread += notification.unread_count;
+                        // Si l'utilisateur est déjà dans la conversation privée active ou récemment fermée
+                        if (parseInt(currentReceiverId) === userId || parseInt(recentlyClosedReceiverId) === userId) {
+                            console.log(`Pas de notification pour ${userId} car la conversation est active ou récemment fermée.`);
+                            removeNotificationBadge(li); // Retirer le badge pour l'utilisateur actif
+                        } else {
+                            // Sinon, afficher le badge de notification et jouer le son
+                            const previousCount = parseInt(li.querySelector('.notification-badge')?.textContent || 0);
+                            updateNotificationBadge(li, notification.unread_count);
+    
+                            if (notification.unread_count > previousCount) {
+                                playNotificationSound(); // Joue le son pour une nouvelle notification
+                            }
+    
+                            totalUnread += notification.unread_count;
+                            console.log(`Notification pour ${userId}.`);
+                        }
                     } else {
+                        // Supprimer le badge si aucune notification
                         removeNotificationBadge(li);
                     }
                 });
     
+                // Ajouter de nouvelles conversations si elles n'existent pas encore
                 data.forEach(conversation => {
                     const existingItem = existingItems.find(
-                        li => li.dataset.userId === String(conversation.sender_id)
+                        li => parseInt(li.dataset.userId) === conversation.sender_id
                     );
     
                     if (!existingItem) {
@@ -197,31 +213,40 @@ document.addEventListener('DOMContentLoaded', function () {
                             markAsRead(conversation.sender_id);
                         });
     
-                        updateNotificationBadge(li, conversation.unread_count);
-                        totalUnread += conversation.unread_count;
+                        // On n'affiche une notification que si ce n'est pas l'utilisateur actif ou récemment fermé
+                        if (
+                            parseInt(currentReceiverId) !== conversation.sender_id &&
+                            parseInt(recentlyClosedReceiverId) !== conversation.sender_id
+                        ) {
+                            updateNotificationBadge(li, conversation.unread_count);
+                            totalUnread += conversation.unread_count;
+                            playNotificationSound(); // Joue le son pour une nouvelle conversation
+                        }
     
                         conversationsList.appendChild(li);
                     }
                 });
     
-                // Mettre à jour le badge total des notifications
-                const menuNotificationBadge = document.getElementById('menu-notification-badge');
-                if (menuNotificationBadge) {
-                    menuNotificationBadge.textContent = totalUnread;
-                    menuNotificationBadge.style.display = totalUnread > 0 ? 'inline-block' : 'none';
+                // Mettre à jour le badge global
+                const menuBadge = document.getElementById('menu-notification-badge');
+                if (menuBadge) {
+                    if (totalUnread > 0) {
+                        menuBadge.textContent = totalUnread;
+                        menuBadge.style.display = 'inline-block';
+                    } else {
+                        menuBadge.style.display = 'none';
+                    }
                 }
     
-                if (totalUnread > previousUnreadCount) {
-                    playNotificationSound();
-                }
-    
+                // Met à jour la valeur précédente
                 previousUnreadCount = totalUnread;
             })
             .catch(error => {
                 console.error('Erreur lors du chargement des notifications :', error);
-                alert('Une erreur est survenue lors de la récupération des notifications.');
             });
     }
+    
+    
     
 
     function updateNotificationBadge(element, unreadCount) {
@@ -277,9 +302,19 @@ document.addEventListener('DOMContentLoaded', function () {
     } 
 
     closePrivateChatButton.addEventListener('click', function () {
+        if (currentReceiverId !== null) {
+            markAsRead(currentReceiverId);
+        }
+        recentlyClosedReceiverId = currentReceiverId;
         currentReceiverId = null;
         document.getElementById('private-chat').style.display = 'none';
+    
+        setTimeout(() => {
+            recentlyClosedReceiverId = null;
+        }, 5000);
     });
+    
+    
 
     // Gestion des émojis
     emojiPickerButton.addEventListener('click', function () {
